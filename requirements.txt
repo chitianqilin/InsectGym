@@ -1,0 +1,6 @@
+setuptools~=57.4.0
+numpy~=1.19.4
+opencv-python~=4.5.3.56
+matplotlib~=3.3.3
+gym~=0.15.7
+scipy~=1.6.3
