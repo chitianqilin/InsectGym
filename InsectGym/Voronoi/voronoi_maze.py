@@ -1,6 +1,6 @@
 import random
 from InsectGym.Voronoi.voronoi_graph import VoronoiGraph
-
+import numpy as np
 """
 class for generating the Voronoi diagram maze with randomized depth first search,
 and solving the maze.
@@ -17,6 +17,9 @@ def max_neighbour_num(a_graph):
         if len(item) > max_num:
             max_num = len(item)
     return max_num
+
+def length(line):
+    return np.sqrt(np.sum((np.array(line[0])-np.array(line[1]))**2))
 
 class VoronoiMaze:
     def __init__(self, width=100, height=100, multi_route_prob=0):
@@ -52,7 +55,8 @@ class VoronoiMaze:
             neighbors = self.graph[current]
             random.shuffle(neighbors)
             for n in neighbors:
-                if n not in visited:
+                if n not in visited and \
+                    length(self.voronoi.point_pairs_separating_edges[(current, n)])>2:
                     legal_edges[(current, n)] = True
                     legal_edges[(n, current)] = True
                     edges_to_remove.append(self.voronoi.point_pairs_separating_edges[(current, n)])
@@ -68,7 +72,8 @@ class VoronoiMaze:
             for key, item in self.graph.items():
                 for n2 in item:
                     if (key, n2) not in legal_traversal_edges:
-                        if random.uniform(0, 1) < multi_route_prob:
+                        if random.uniform(0, 1) < multi_route_prob and \
+                                length(self.voronoi.point_pairs_separating_edges[(key, n2)])>2:
                             legal_traversal_edges[(key, n2)] = True
                             legal_traversal_edges[(n2, key)] = True
                             edges_to_remove.append(self.voronoi.point_pairs_separating_edges[(key, n2)])

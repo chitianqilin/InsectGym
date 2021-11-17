@@ -21,7 +21,7 @@ writer = Writer(fps=15, metadata=dict(artist='Me'), bitrate=550)
 class VoronoiMazePlot:
     """optional pass in colors_dict of colors for plot"""
 
-    def __init__(self, maze, colors_dict=None, location=None, label_index=True):
+    def __init__(self, maze, colors_dict=None, location=None, label_index=True, enter=None, exit=None):
         self.maze = maze
         self.maze_line_thickness = 1
         if not colors_dict:
@@ -42,7 +42,7 @@ class VoronoiMazePlot:
         self.fig, self.ax = self.initialize_plot()
         self.draw_voronoi()
 
-        self.draw_maze(location, label_index=label_index)
+        self.draw_maze(location, label_index=label_index, enter=enter, exit=exit)
 
 
     def set_colors(self, colors_dict):
@@ -75,11 +75,11 @@ class VoronoiMazePlot:
         plt.margins(0.009, 0.009)
         return ax
 
-    def clear_maze(self, keep_enter_exit=True):
+    def clear_maze(self, keep_enter_exit=True, enter=None, exit=None):
         """clears previous plot polygons for each new path solver"""
         [p.remove() for p in reversed(self.ax.patches)]
         if keep_enter_exit:
-            self.draw_enter_exit()
+            self.draw_enter_exit(enter=enter, exit=exit)
         return
 
     def draw_seed_points(self, seed_thickness=0.5, label_index=False):
@@ -116,15 +116,27 @@ class VoronoiMazePlot:
         self.filled_polygon = self.ax.add_patch(polygon)
 
     def animate_fill_polygon(self, location):
-        if hasattr(self, 'filled_polygon'):
-            self.filled_polygon.remove()
+        [p.remove() for p in reversed(self.ax.patches)]
+        # if hasattr(self, 'filled_polygon') and isinstance(self.filled_polygon, matplotlib.patches.Polygon):
+        #     self.filled_polygon.remove()
         self.fill_polygon(location)
         return self.filled_polygon
 
-    def draw_enter_exit(self):
+    def clear_enter_exit(self):
+        self.start_polygon.remove()
+        self.exit_polygon.remove()
+
+    def draw_enter_exit(self, enter=None, exit=None):
+        [p.remove() for p in reversed(self.ax.patches)]
         """plot enter and exit cells on the graph"""
-        self.start_polygon = Polygon(self.get_polygon_points(self.maze.start), True)
-        self.exit_polygon = Polygon(self.get_polygon_points(self.maze.exit), True)
+        if enter is None:
+            self.start_polygon = Polygon(self.get_polygon_points(self.maze.start), True)
+        else:
+            self.start_polygon = Polygon(self.get_polygon_points(enter), True)
+        if exit is None:
+            self.exit_polygon = Polygon(self.get_polygon_points(self.maze.exit), True)
+        else:
+            self.exit_polygon = Polygon(self.get_polygon_points(exit), True)
         self.start_polygon.set_facecolor(self.start_color)
         self.exit_polygon.set_facecolor(self.exit_color)
         self.exit_polygon.set_alpha(0.4)
@@ -150,12 +162,13 @@ class VoronoiMazePlot:
         if save:
             if not os.path.exists(plot_path):
                 os.makedirs(plot_path)
-                plt.savefig(os.path.join(plot_path, "initial_voronoi_diagram.png"), bbox_inches='tight', pad_inches=0.0)
+            plt.savefig(os.path.join(plot_path, "initial_voronoi_diagram.png"), bbox_inches='tight', pad_inches=0.0)
         # clear axis
         plt.cla()
         return
 
-    def draw_maze(self, location=None, plot_path="visualizations", label_index=False, save=False):
+    def draw_maze(self, location=None, plot_path="visualizations", label_index=False, save=False,
+                  enter=None, exit=None):
         self.ax = self.reset_axis()
         self.draw_seed_points(label_index=label_index)
         self.wall_lines = []
@@ -170,13 +183,14 @@ class VoronoiMazePlot:
                 self.wall_lines.append(self.ax.plot([first[0], second[0]], [first[1], second[1]], color=self.maze_line_color,
                              linewidth=self.maze_line_thickness))
         patches = []
-        self.draw_enter_exit()
+        # self.draw_enter_exit(enter=enter, exit=exit)
         if location is not None:
-            self.fill_region(location)
+            self.fill_polygon(location)
         if save:
             if not os.path.exists(plot_path):
                 os.makedirs(plot_path)
             plt.savefig(os.path.join(plot_path, "voronoi_maze_initial.png"), bbox_inches='tight', pad_inches=0)
+
         return
     #
     # def draw_location_indexes(self):
