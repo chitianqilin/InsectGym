@@ -61,7 +61,7 @@ class MultiPassengerTaxiEnv(discrete.DiscreteEnv):
     - other letters (Y, M,and B): locations for passengers and destinations
 
     state space is represented by:
-        (taxi_row, taxi_col, passenger_1_on, passenger_2_on, passenger_3_on)
+        (taxi_row, taxi_col, [passenger_1_on, passenger_2_on, passenger_3_on])
     """
 
     metadata = {"render.modes": ["human", "ansi"]}
