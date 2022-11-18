@@ -10,11 +10,11 @@ font = cv2.FONT_HERSHEY_COMPLEX_SMALL
 
 class VoronoiWorldGoal(VoronoiWorld, GoalEnv):
     def __init__(self, colors_dict=None, multi_route_prob=0.1, plot_path=None, task_path=None,
-                 random_start=False):
+                 random_start=False, num_goals=1):
         # super(VoronoiWorldTarget, self).__init__(colors_dict=colors_dict, multi_route_prob=multi_route_prob)
         self.random_start = random_start
         super(VoronoiWorldGoal, self).__init__(colors_dict=colors_dict, multi_route_prob=multi_route_prob,
-                                               plot_path=plot_path, task_path=task_path)
+                                               plot_path=plot_path, task_path=task_path, num_exits=num_goals)
         # self.width = 100
         # self.height = 100
         # self.maze = VoronoiMaze(width=self.width, height=self.height, multi_route_prob=multi_route_prob)
@@ -71,7 +71,7 @@ class VoronoiWorldGoal(VoronoiWorld, GoalEnv):
         # If out of fuel, end the episode.
         if self.robot.fuel_left == 0:
             done = True
-        if self.robot.location_index == self.goal_location_index:
+        if np.any(self.robot.location_index == self.goal_location_index):
             done = True
         obs = {
             'observation': self.robot.location_index,
@@ -87,7 +87,7 @@ class VoronoiWorldGoal(VoronoiWorld, GoalEnv):
         reward = -1
         if len(self.maze.path_graph[info['robot_location']]) <= info['actual_action']:
             self.reward -= 0  # no punishment to hit the wall for now.
-        if achieved_goal==desired_goal:
+        if np.any(achieved_goal == desired_goal):
             reward += 20
         return reward
 
@@ -96,12 +96,12 @@ class VoronoiWorldGoal(VoronoiWorld, GoalEnv):
             self.start_location_index = random.choice(range(self.number_of_locations))
         else:
             if hasattr(self, 'goal_location_index'):
-                self.start_location_index = self.goal_location_index
+                self.start_location_index = self.robot.location_index
             else:
                 self.start_location_index = random.choice(range(self.number_of_locations))
         self.robot = Robot(location=self.index_to_coordinate(self.start_location_index),
                            location_index=self.start_location_index)
-        self.goal_location_index = random.choice(range(len(self.locations)))
+        self.goal_location_index = np.random.choice(len(self.locations), self.num_exits).tolist()
         self.goal_location = self.index_to_coordinate(self.goal_location_index)
         self.reward = 0
         self.init_enter_exit_on_canvas()
@@ -117,7 +117,7 @@ class VoronoiWorldGoal(VoronoiWorld, GoalEnv):
 
 
 if __name__ == "__main__":
-    env = VoronoiWorldGoal()
+    env = VoronoiWorldGoal(num_goals=2)
     obs = env.reset()
     while True:
         # Take a random action

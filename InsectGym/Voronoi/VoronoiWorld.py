@@ -7,9 +7,12 @@ import random
 from gym import Env, spaces
 from InsectGym.Voronoi.voronoi_maze import VoronoiMaze
 from InsectGym.Voronoi.voronoi_maze_plots import VoronoiMazePlot
+from InsectGym.Voronoi.VoronoiMazeMultiExits import VoronoiMazeMultiExits
+from InsectGym.Voronoi.VoronoiMazeMultiExitsPlots import VoronoiMazeMultiExitsPlots
 import json
 from InsectGym.Utils.io import sterilize
 import pickle
+
 font = cv2.FONT_HERSHEY_COMPLEX_SMALL
 
 
@@ -42,13 +45,17 @@ class Robot:
 
 
 class VoronoiWorld(Env):
-    def __init__(self, colors_dict=None, multi_route_prob=0.1, plot_path=None, task_path=None):
+    def __init__(self, colors_dict=None, multi_route_prob=0.1, plot_path=None, task_path=None, num_exits=1):
         super(VoronoiWorld, self).__init__()
         self.width = 100
         self.height = 100
-        self.maze = VoronoiMaze(width=self.width, height=self.height, multi_route_prob=multi_route_prob)
-        self.locations = np.array(
-            self.maze.voronoi.points)  # not self.maze.voronoi.vor.point because of 4 boundary points?
+        self.num_exits = num_exits
+        if self.num_exits == 1:
+            self.maze = VoronoiMaze(width=self.width, height=self.height, multi_route_prob=multi_route_prob)
+        else:
+            self.maze = VoronoiMazeMultiExits(width=self.width, height=self.height, multi_route_prob=multi_route_prob,
+                                              num_exits=self.num_exits)
+        self.locations = np.array(self.maze.voronoi.points)  # not self.maze.voronoi.vor.point because of 4 boundary points?
         self.number_of_locations = len(self.locations)
         print("max_viable_neighbours = %d" % self.maze.max_viable_neighbours)
         if not colors_dict:
@@ -78,11 +85,11 @@ class VoronoiWorld(Env):
 
         # Define an action space according to self.maze.max_viable_neighbours
         self.action_space = spaces.Discrete(self.maze.max_viable_neighbours, )
-        if plot_path is not None:
-            self.maze_plot = VoronoiMazePlot(self.maze, colors_dict=self.colors_dict, )
-            self.maze_plot.draw_voronoi(plot_path=plot_path, save=True)
-            self.maze_plot.draw_maze(plot_path=plot_path, save=True, label_index=True)
-        self.init_plot_on_canvas()
+        # if plot_path is not None:
+        #     self.maze_plot = VoronoiMazePlot(self.maze, colors_dict=self.colors_dict, )
+        #     self.maze_plot.draw_voronoi(plot_path=plot_path, save=True)
+        #     self.maze_plot.draw_maze(plot_path=plot_path, save=True, label_index=True)
+        self.init_plot_on_canvas(plot_path)
         self.reset()
 
         if task_path is not None:
@@ -90,8 +97,14 @@ class VoronoiWorld(Env):
             self.pickle(task_path=task_path)
             pass
 
-    def init_plot_on_canvas(self):
-        self.maze_plot = VoronoiMazePlot(self.maze, colors_dict=self.colors_dict)
+    def init_plot_on_canvas(self, plot_path=None):
+        if self.num_exits == 1:
+            self.maze_plot = VoronoiMazePlot(self.maze, colors_dict=self.colors_dict)
+        else:
+            self.maze_plot = VoronoiMazeMultiExitsPlots(self.maze, colors_dict=self.colors_dict)
+        if plot_path is not None:
+            self.maze_plot.draw_voronoi(plot_path=plot_path, save=True)
+            self.maze_plot.draw_maze(plot_path=plot_path, save=True, label_index=True)
         self.canvas_backgroud = fig_to_RGB_array(self.maze_plot.fig)
         self.canvas = self.canvas_backgroud
         self.maze_plot.clear_existing_elements()
@@ -105,7 +118,7 @@ class VoronoiWorld(Env):
         # self.canvas_enter_exit [self.canvas_enter_exit  > 250] = 0
         # self.canvas_backgroud_enter_exit = cv2.addWeighted(self.canvas_backgroud, 0.9, self.canvas_enter_exit, 0.3, 0)
         # self.canvas_backgroud_enter_exit = np.array(self.canvas_backgroud.astype(dtype=np.uint16) * self.canvas_enter_exit / 255).astype(dtype=np.uint8)
-        self.canvas_backgroud_enter_exit = cv2.multiply(self.canvas_backgroud, self.canvas_enter_exit, scale=1.0/ 255)
+        self.canvas_backgroud_enter_exit = cv2.multiply(self.canvas_backgroud, self.canvas_enter_exit, scale=1.0 / 255)
         self.maze_plot.clear_enter_exit()
 
     def draw_location_on_canvas(self):
@@ -115,7 +128,7 @@ class VoronoiWorld(Env):
         # forgorund[forgorund > 250] = 0
         # self.canvas = cv2.addWeighted(self.canvas_backgroud_enter_exit, 0.9, forgorund, 0.5, 0)
         # self.canvas = np.array(self.canvas_backgroud_enter_exit.astype(dtype=np.uint16) * forgorund/ 255).astype(dtype=np.uint8)
-        self.canvas = cv2.multiply(self.canvas_backgroud_enter_exit, forgorund, scale=1.0/255)
+        self.canvas = cv2.multiply(self.canvas_backgroud_enter_exit, forgorund, scale=1.0 / 255)
         # self.canvas = self.canvas_backgroud * forgorund
         # self.canvas = self.canvas/self.canvas.max()*255
 
@@ -125,9 +138,13 @@ class VoronoiWorld(Env):
                                   0.8, (0, 0, 0), 1, cv2.LINE_AA)
 
     def reset(self):
-        self.start_location_index=self.coordinate_to_index(self.maze.start)
+        self.start_location_index = self.coordinate_to_index(self.maze.start)
         self.robot = Robot(location=self.maze.start, location_index=self.start_location_index)
-        self.goal_location_index = self.coordinate_to_index(self.maze.exit)
+        if self.num_exits == 1:
+            self.goal_location_index = self.coordinate_to_index(self.maze.exit)
+        else:
+            self.goal_location_index = self.coordinates_to_indexs(self.maze.exit)
+
         self.goal_location = self.maze.exit
         self.reward = 0
         self.location_index = self.coordinate_to_index(self.robot.location)
@@ -173,7 +190,7 @@ class VoronoiWorld(Env):
         # If out of fuel, end the episode.
         if self.robot.fuel_left == 0:
             done = True
-        if self.robot.location_index == self.goal_location_index:
+        if np.any(self.robot.location_index == self.goal_location_index):
             self.reward += 20
             done = True
         state = {'robot_location': self.robot.location, 'goal_location': self.goal_location}
@@ -187,8 +204,22 @@ class VoronoiWorld(Env):
             if self.locations[first_index, 1] == coordinate[1]:
                 return first_index[0]
 
+    def coordinates_to_indexs(self, locations):
+        # self.maze.voronoi.points
+        # self.maze.voronoi.vor.point
+        indexs = []
+        for location in locations:
+            indexs.append(self.coordinate_to_index(location))
+        return indexs
+
     def index_to_coordinate(self, location_index):
-        return self.maze.voronoi.points[location_index]
+        if np.isscalar(location_index):
+            return self.maze.voronoi.points[location_index]
+        else:
+            point_list = []
+            for an_index in location_index:
+                point_list.append(self.maze.voronoi.points[an_index])
+            return point_list
 
     def to_JSON(self, task_path=None):
         if task_path is not None:
@@ -199,7 +230,7 @@ class VoronoiWorld(Env):
                 json.dump(self, f, default=sterilize, sort_keys=True, indent=4)
         else:
             return json.dumps(self, default=sterilize,
-                sort_keys=True, indent=4)
+                              sort_keys=True, indent=4)
 
     # def save_as_JSON(self, task_path='VornoidWorld'):
     #     if not os.path.exists(task_path):
@@ -215,7 +246,7 @@ class VoronoiWorld(Env):
 
 
 if __name__ == "__main__":
-    env = VoronoiWorld()
+    env = VoronoiWorld(num_exits=2)
     obs = env.reset()
     while True:
         # Take a random action
