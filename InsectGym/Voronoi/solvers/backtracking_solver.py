@@ -25,7 +25,7 @@ class MazeSolverBacktracking:
 		current = self.maze.start
 		path = []
 		seen = []
-		while current != self.maze.exit:
+		while current != self.maze.exit_index:
 			neighbors = self.get_legal_neighbors(current, path)
 			if len(neighbors) > 0:
 				seen.append(current)

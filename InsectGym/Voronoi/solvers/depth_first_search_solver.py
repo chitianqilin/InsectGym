@@ -11,7 +11,7 @@ class MazeSolverDFS:
         while stack:
             current = stack.pop()
             visited.append(current)
-            if current == self.maze.exit:
+            if current == self.maze.exit_index:
                 # found the exit
                 break
             neighbors = self.maze.graph[current]

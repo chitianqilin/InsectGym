@@ -1,6 +1,7 @@
 import os
 import random
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.patches import Polygon
 import matplotlib.animation as animation
 from matplotlib.animation import PillowWriter
@@ -21,7 +22,7 @@ writer = Writer(fps=15, metadata=dict(artist='Me'), bitrate=550)
 class VoronoiMazePlot:
     """optional pass in colors_dict of colors for plot"""
 
-    def __init__(self, maze, colors_dict=None, location=None, label_index=True, enter=None, exit=None):
+    def __init__(self, maze, colors_dict=None, location=None, label_index=True, enter_index=None, exit_index=None):
         self.maze = maze
         self.maze_line_thickness = 1
         if not colors_dict:
@@ -42,7 +43,7 @@ class VoronoiMazePlot:
         self.fig, self.ax = self.initialize_plot()
         self.draw_voronoi()
 
-        self.draw_maze(location, label_index=label_index, enter=enter, exit=exit)
+        self.draw_maze(location, label_index=label_index, enter_index=enter_index, exit_index=exit_index)
 
 
     def set_colors(self, colors_dict):
@@ -79,7 +80,7 @@ class VoronoiMazePlot:
         """clears previous plot polygons for each new path solver"""
         [p.remove() for p in reversed(self.ax.patches)]
         if keep_enter_exit:
-            self.draw_enter_exit(enter=enter, exit=exit)
+            self.draw_enter_exit(enter_index=enter, exit_index=exit)
         return
 
     def draw_seed_points(self, seed_thickness=0.5, label_index=False):
@@ -126,17 +127,20 @@ class VoronoiMazePlot:
         self.start_polygon.remove()
         self.exit_polygon.remove()
 
-    def draw_enter_exit(self, enter=None, exit=None):
+    def draw_enter_exit(self, enter_index=None, exit_index=None):
         [p.remove() for p in reversed(self.ax.patches)]
         """plot enter and exit cells on the graph"""
-        if enter is None:
+        if enter_index is None:
             self.start_polygon = Polygon(self.get_polygon_points(self.maze.start), True)
         else:
-            self.start_polygon = Polygon(self.get_polygon_points(enter), True)
-        if exit is None:
-            self.exit_polygon = Polygon(self.get_polygon_points(self.maze.exit), True)
-        else:
-            self.exit_polygon = Polygon(self.get_polygon_points(exit), True)
+            self.start_polygon = Polygon(self.get_polygon_points(enter_index), True)
+        if exit_index is None:
+            exit_index = self.maze.exit_index
+            # self.exit_polygon = Polygon(self.get_polygon_points(self.maze.exit), True)
+        #if len(exit_index)==1:
+        self.exit_polygon = Polygon(self.get_polygon_points(exit_index), True)
+
+
         self.start_polygon.set_facecolor(self.start_color)
         self.exit_polygon.set_facecolor(self.exit_color)
         self.exit_polygon.set_alpha(0.4)
@@ -168,7 +172,7 @@ class VoronoiMazePlot:
         return
 
     def draw_maze(self, location=None, plot_path="visualizations", label_index=False, save=False,
-                  enter=None, exit=None):
+                  enter_index=None, exit_index=None):
         self.ax = self.reset_axis()
         self.draw_seed_points(label_index=label_index)
         self.wall_lines = []
@@ -183,7 +187,7 @@ class VoronoiMazePlot:
                 self.wall_lines.append(self.ax.plot([first[0], second[0]], [first[1], second[1]], color=self.maze_line_color,
                              linewidth=self.maze_line_thickness))
         patches = []
-        # self.draw_enter_exit(enter=enter, exit=exit)
+        # self.draw_enter_exit(enter_index=enter_index, exit_index=exit_index)
         if location is not None:
             self.fill_polygon(location)
         if save:
@@ -226,7 +230,7 @@ class VoronoiMazePlot:
     def animate_polygons(self, frame):
         point = self.path[frame]
         polygon = Polygon(self.get_polygon_points(point), True)
-        if point not in [self.maze.start, self.maze.exit]:
+        if point not in [self.maze.start, self.maze.exit_index]:
             if point in self.path[:frame]:
                 # backtracking
                 polygon.set_facecolor(self.polygon_backtracking_color)
@@ -236,7 +240,7 @@ class VoronoiMazePlot:
                 polygon.set_facecolor(self.polygon_face_color)
                 polygon.set_edgecolor(self.polygon_edge_color)
                 self.ax.add_patch(polygon)
-        if point == self.maze.exit:
+        if point == self.maze.exit_index:
             polygon.set_facecolor(self.exit_color)
             polygon.set_alpha(1)
             self.ax.add_patch(polygon)

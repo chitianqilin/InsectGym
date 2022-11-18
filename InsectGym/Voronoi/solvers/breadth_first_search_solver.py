@@ -13,7 +13,7 @@ class MazeSolverBFS:
 		while queue:
 			current = queue.pop()
 			visited.append(current)
-			if current == self.maze.exit:
+			if current == self.maze.exit_index:
 				#found exit
 				break
 			neighbors = self.maze.graph[current]

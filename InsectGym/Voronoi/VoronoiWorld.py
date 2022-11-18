@@ -97,8 +97,10 @@ class VoronoiWorld(Env):
         self.maze_plot.clear_existing_elements()
 
     def init_enter_exit_on_canvas(self):
-        self.maze_plot.draw_enter_exit(enter=self.index_to_coordinate(self.start_location_index),
-                                   exit=self.index_to_coordinate(self.goal_location_index))
+        self.maze_plot.draw_enter_exit(enter_index=self.index_to_coordinate(self.start_location_index),
+                                       exit_index=self.index_to_coordinate(self.goal_location_index))
+        # self.maze_plot.draw_enter_exit(enter_index=self.start_location_index,
+        #                                exit_index=self.goal_location_index)
         self.canvas_enter_exit = fig_to_RGB_array(self.maze_plot.fig)
         # self.canvas_enter_exit [self.canvas_enter_exit  > 250] = 0
         # self.canvas_backgroud_enter_exit = cv2.addWeighted(self.canvas_backgroud, 0.9, self.canvas_enter_exit, 0.3, 0)
@@ -177,12 +179,12 @@ class VoronoiWorld(Env):
         state = {'robot_location': self.robot.location, 'goal_location': self.goal_location}
         return self.robot.location_index, self.reward, done, state
 
-    def coordinate_to_index(self, location):
+    def coordinate_to_index(self, coordinate):
         # self.maze.voronoi.points
         # self.maze.voronoi.vor.point
-        first_indexes = np.where(self.locations[:, 0] == location[0])
+        first_indexes = np.where(self.locations[:, 0] == coordinate[0])
         for first_index in first_indexes:
-            if self.locations[first_index, 1] == location[1]:
+            if self.locations[first_index, 1] == coordinate[1]:
                 return first_index[0]
 
     def index_to_coordinate(self, location_index):

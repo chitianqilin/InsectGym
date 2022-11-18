@@ -27,8 +27,8 @@ class MazeSolverDijkstra:
 		"""gets the minimum distance from that node to any of the exit points"""
 		x1 = node[0]
 		y1 = node[1]
-		x2 = self.maze.exit[0]
-		y2 = self.maze.exit[1]
+		x2 = self.maze.exit_index[0]
+		y2 = self.maze.exit_index[1]
 		weight = abs(x1-x2) + abs(y1-y2)
 		return weight
 
@@ -43,7 +43,7 @@ class MazeSolverDijkstra:
 		while queue:
 			current = heapq.heappop(queue)
 			seen.append((current.x,current.y))
-			if (current.x,current.y) == self.maze.exit:
+			if (current.x,current.y) == self.maze.exit_index:
 				return seen
 			neighbors = self.maze.graph[(current.x,current.y)]
 			for n in neighbors:
