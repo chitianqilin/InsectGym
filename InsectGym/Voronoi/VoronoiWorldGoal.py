@@ -101,7 +101,10 @@ class VoronoiWorldGoal(VoronoiWorld, GoalEnv):
                 self.start_location_index = random.choice(range(self.number_of_locations))
         self.robot = Robot(location=self.index_to_coordinate(self.start_location_index),
                            location_index=self.start_location_index)
+
         self.goal_location_index = np.random.choice(len(self.locations), self.num_exits).tolist()
+        if self.num_exits == 1:
+            self.goal_location_index = self.goal_location_index[0]
         self.goal_location = self.index_to_coordinate(self.goal_location_index)
         self.reward = 0
         self.init_enter_exit_on_canvas()
