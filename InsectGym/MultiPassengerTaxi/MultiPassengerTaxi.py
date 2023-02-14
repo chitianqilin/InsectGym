@@ -72,7 +72,7 @@ class MultiPassengerTaxiEnv(discrete.DiscreteEnv):
         # self.locs = locs = [(0, 0), (0, 4), (4, 0), (4, 3)]
         self.locs = locs = [(0, 2), (4, 6), (5, 0)]
         self.dest_loc = (0, 6)
-        self.reward_options = (0, 3, 15)
+        self.reward_options = (1, 3, 15)  # (0, 3, 15)
         num_passenger = 3
         self.num_rows = 6
         self.num_columns = 7
