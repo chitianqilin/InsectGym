@@ -10,6 +10,7 @@ register(
      max_episode_steps=10000
  )
 
+
 register(
      id='ChopperScape-v1',
      entry_point='InsectGym.ChopperScape.ChopperScape:ChopperScape',
@@ -19,5 +20,11 @@ register(
 register(
      id='MultiPassengerTaxi-v1',
      entry_point='InsectGym.MultiPassengerTaxi.MultiPassengerTaxi:MultiPassengerTaxiEnv',
+     max_episode_steps=10000
+ )
+
+register(
+     id='MultiPassengerTaxiPick-v1',
+     entry_point='InsectGym.MultiPassengerTaxi.MultiPassengerTaxiPick:MultiPassengerTaxiPickEnv',
      max_episode_steps=10000
  )
