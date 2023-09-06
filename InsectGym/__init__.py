@@ -28,3 +28,9 @@ register(
      entry_point='InsectGym.MultiPassengerTaxi.MultiPassengerTaxiPick:MultiPassengerTaxiPickEnv',
      max_episode_steps=10000
  )
+
+register(
+     id='MaggotInPetriDish-v1',
+     entry_point='InsectGym.MaggotInPetriDish.MaggotInPetriDish:MaggotInPetriDishEnv',
+     max_episode_steps=10000
+ )
