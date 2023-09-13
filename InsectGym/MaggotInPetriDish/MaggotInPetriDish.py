@@ -125,7 +125,7 @@ class MaggotInPetriDishEnv(discrete.DiscreteEnv):
     metadata = {"render.modes": ["human", "ansi"]}
 
     # fructose, quinine
-    def __init__(self, odor=['AM', 'OCT'], reinforcer=['fructose'], num_locations=5):
+    def __init__(self, odor=['AM', 'OCT'], reinforcer=['fructose'], num_locations=5, never_done=False):
         optional_odor = (None, 'AM', 'OCT')
         optional_reinforcer = (None, 'fructose', 'quinine')
         for an_odor in odor:
@@ -138,6 +138,7 @@ class MaggotInPetriDishEnv(discrete.DiscreteEnv):
         self.reinforcer = reinforcer
         self.reward_options = (1, -1)
         num_states = (self.num_locations)
+        self.never_done = never_done
 
         initial_state_distrib = np.zeros(num_states)
         initial_state_distrib[2] = 1
@@ -150,11 +151,12 @@ class MaggotInPetriDishEnv(discrete.DiscreteEnv):
         }
 
 
-        done = False
+        # done = False
 
         if self.odor[0] != self.odor[1]:
             for a_location in range(self.num_locations):
                 for an_action in range(num_actions):
+                    done = False
                     new_location = a_location
                     reward = 0
                     if an_action == 0:
@@ -183,6 +185,10 @@ class MaggotInPetriDishEnv(discrete.DiscreteEnv):
                                 reward = -1
                             else:
                                 reward = 0
+                    if reward==1:
+                        done = True
+                    if self.never_done:
+                        done = False
                     P[a_location][an_action].append((1.0, new_location, reward, done))
         if self.odor[0] == self.odor[1]:
             for a_location in range(self.num_locations):
@@ -196,6 +202,7 @@ class MaggotInPetriDishEnv(discrete.DiscreteEnv):
                     #         reward = 0
                     # else:
                     #     reward = 0
+                    done = False
                     if an_action == 1 and 'AM' in self.odor:
                         if 'fructose' in self.reinforcer:
                             reward = 1
@@ -212,6 +219,10 @@ class MaggotInPetriDishEnv(discrete.DiscreteEnv):
                             reward = 0
                     else:
                         reward = 0
+                    if reward==1:
+                        done = True
+                    if self.never_done:
+                        done = False
                     if an_action == 0:
                         new_location = a_location
                         P[a_location][an_action].append((1.0, new_location, reward, done))
@@ -248,7 +259,10 @@ class MaggotInPetriDishEnv(discrete.DiscreteEnv):
         elif odor_letter == b'O':
             out[0] = 'OCT'
         elif odor_letter == b'M':
-            out[0] = random.choice(self.odor)
+            if self.odor[0]==self.odor[1]:
+                out[0] = self.odor[0]
+            else:
+                out[0] = 'MIX'
         if reinforcer_letter == b'F':
             out[1] = 'fructose'
         elif reinforcer_letter == b'Q':
