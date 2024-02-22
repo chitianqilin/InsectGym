@@ -49,9 +49,9 @@ class MaggotInPetriDishEnv(discrete.DiscreteEnv):
     Actions:
     There are 5 discrete deterministic actions:
     - 0: None
-    - 1: move to amylacetate (AM)
+    - 1: apetite to amylacetate (AM)
     - 2: escape from amylacetate (AM)
-    - 3: move to 1-octanol (OCT)
+    - 3: apetite to 1-octanol (OCT)
     - 4: escape from 1-octanol (OCT)
 
     conditions:
@@ -327,6 +327,7 @@ if __name__ == "__main__":
     # reinforcer = [None]
     env = MaggotInPetriDishEnv(odor, reinforcer)
     obs = env.reset()
+    print(obs, env.decode(obs))
     while True:
         # Take a random action
         action = env.action_space.sample()
