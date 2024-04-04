@@ -161,7 +161,7 @@ class MaggotInPetriDishEnv(discrete.DiscreteEnv):
                     reward = 0
                     if an_action == 0:
                         pass
-                    elif 'AM' in self.odor:
+                    if 'AM' in self.odor:
                         if an_action == 1 and a_location != 0:
                             new_location = a_location - 1
                         elif an_action == 2 and a_location != 4:
@@ -173,7 +173,7 @@ class MaggotInPetriDishEnv(discrete.DiscreteEnv):
                                 reward = -1
                             else:
                                 reward = 0
-                    elif 'OCT' in self.odor:
+                    if 'OCT' in self.odor:
                         if an_action == 3 and a_location != 4:
                             new_location = a_location + 1
                         elif an_action == 4 and a_location != 0:
