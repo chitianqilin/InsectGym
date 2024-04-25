@@ -231,7 +231,7 @@ class MaggotInPetriDishEnv(discrete.DiscreteEnv):
                             P[a_location][an_action].append((0.5, a_location, reward, done))
                             new_location = a_location + 1
                             P[a_location][an_action].append((0.5, new_location, reward, done))
-                        if a_location == 4:
+                        elif a_location == 4:
                             new_location = a_location - 1
                             P[a_location][an_action].append((0.5, new_location, reward, done))
                             P[a_location][an_action].append((0.5, a_location, reward, done))
